@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crowdfunding · Base</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1>💰 Crowdfunding</h1>
+        <p class="subtitle">Launch a campaign or back one on Base.</p>
+        <button id="connectBtn" class="btn">Connect Wallet</button>
+        <p id="account" class="account hidden"></p>
+      </header>
+
+      <section id="createCard" class="create-card hidden">
+        <h2>Launch a campaign</h2>
+        <input id="titleInput" type="text" maxlength="200" placeholder="Campaign title…" />
+        <div class="row2">
+          <input id="goalInput" type="number" min="0" step="0.001" placeholder="Goal (ETH)" />
+          <select id="durationInput">
+            <option value="3600">1 hour</option>
+            <option value="86400" selected>1 day</option>
+            <option value="604800">7 days</option>
+            <option value="2592000">30 days</option>
+          </select>
+        </div>
+        <button id="createBtn" class="btn btn-big">Create campaign</button>
+      </section>
+
+      <p id="status" class="status"></p>
+
+      <section class="list-section">
+        <div class="list-head">
+          <h2>Campaigns <span id="count" class="counts"></span></h2>
+          <button id="refreshBtn" class="btn btn-ghost" disabled>Refresh</button>
+        </div>
+        <div id="campaigns" class="campaigns"></div>
+        <p id="empty" class="empty">No campaigns yet — launch the first one!</p>
+      </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
