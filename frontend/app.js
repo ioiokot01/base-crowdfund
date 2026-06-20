@@ -44,6 +44,7 @@ const els = {
   campaigns: document.getElementById("campaigns"),
   empty: document.getElementById("empty"),
   filters: document.getElementById("filters"),
+  summary: document.getElementById("summary"),
 };
 
 // ---------------------------------------------------------------------------
@@ -152,6 +153,20 @@ async function refresh() {
 }
 
 function render() {
+  // Overall stats across every campaign (independent of the active filter).
+  let totalRaised = 0n;
+  let funded = 0;
+  allCampaigns.forEach(({ c }) => {
+    totalRaised += c.pledged;
+    if (c.pledged >= c.goal) funded += 1;
+  });
+  if (allCampaigns.length > 0) {
+    els.summary.textContent = `${fmtEth(totalRaised)} ETH raised across ${allCampaigns.length} campaigns · ${funded} funded`;
+    els.summary.classList.remove("hidden");
+  } else {
+    els.summary.classList.add("hidden");
+  }
+
   const nowSec = Math.floor(Date.now() / 1000);
   const visible = allCampaigns.filter(({ c, mine }) => {
     const ended = Number(c.deadline) <= nowSec;
