@@ -226,4 +226,34 @@ describe("Crowdfunding", function () {
       await expect(cf.getCampaign(0)).to.be.revertedWith("No such campaign");
     });
   });
+
+  describe("Boundaries & isolation", function () {
+    it("rejects a title over the max length", async function () {
+      const { cf } = await deploy();
+      const longTitle = "x".repeat(201);
+      await expect(
+        cf.createCampaign(longTitle, GOAL, DURATION)
+      ).to.be.revertedWith("Title too long");
+    });
+
+    it("rejects a duration above the maximum", async function () {
+      const { cf } = await deploy();
+      const tooLong = 91 * 24 * 60 * 60; // > 90 days
+      await expect(
+        cf.createCampaign("x", GOAL, tooLong)
+      ).to.be.revertedWith("Bad duration");
+    });
+
+    it("keeps pledges isolated between campaigns", async function () {
+      const { cf, creator, alice } = await withCampaign();
+      await cf.connect(creator).createCampaign("Second", GOAL, DURATION);
+
+      await cf.connect(alice).pledge(0, { value: ethers.parseEther("1") });
+      expect(await cf.pledgeOf(0, alice.address)).to.equal(
+        ethers.parseEther("1")
+      );
+      expect(await cf.pledgeOf(1, alice.address)).to.equal(0n);
+      expect((await cf.getCampaign(1)).pledged).to.equal(0n);
+    });
+  });
 });
