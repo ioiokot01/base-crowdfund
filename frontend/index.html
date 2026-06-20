@@ -37,6 +37,12 @@
           <h2>Campaigns <span id="count" class="counts"></span></h2>
           <button id="refreshBtn" class="btn btn-ghost" disabled>Refresh</button>
         </div>
+        <div id="filters" class="filters hidden">
+          <button class="filter active" data-filter="all">All</button>
+          <button class="filter" data-filter="live">Live</button>
+          <button class="filter" data-filter="ended">Ended</button>
+          <button class="filter" data-filter="mine">Mine</button>
+        </div>
         <div id="campaigns" class="campaigns"></div>
         <p id="empty" class="empty">No campaigns yet — launch the first one!</p>
       </section>

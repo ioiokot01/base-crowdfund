@@ -27,6 +27,8 @@ const ABI = [
 // ---------------------------------------------------------------------------
 
 let provider, signer, contract, account;
+let allCampaigns = []; // cached {id, c, mine}
+let filter = "all"; // all | live | ended | mine
 
 const els = {
   connectBtn: document.getElementById("connectBtn"),
@@ -41,6 +43,7 @@ const els = {
   refreshBtn: document.getElementById("refreshBtn"),
   campaigns: document.getElementById("campaigns"),
   empty: document.getElementById("empty"),
+  filters: document.getElementById("filters"),
 };
 
 // ---------------------------------------------------------------------------
@@ -119,18 +122,20 @@ async function refresh() {
   setStatus("Loading…");
   try {
     const count = Number(await contract.campaignCount());
-    els.count.textContent = count ? `(${count})` : "";
 
     if (count === 0) {
+      allCampaigns = [];
+      els.count.textContent = "";
+      els.filters.classList.add("hidden");
       els.campaigns.innerHTML = "";
+      els.empty.textContent = "No campaigns yet — launch the first one!";
       els.empty.classList.remove("hidden");
       setStatus("");
       return;
     }
-    els.empty.classList.add("hidden");
 
     const ids = [...Array(count).keys()].reverse();
-    const data = await Promise.all(
+    allCampaigns = await Promise.all(
       ids.map(async (id) => {
         const c = await contract.getCampaign(id);
         const mine = await contract.pledgeOf(id, account);
@@ -138,12 +143,35 @@ async function refresh() {
       })
     );
 
-    els.campaigns.innerHTML = "";
-    data.forEach(renderCampaign);
+    els.filters.classList.remove("hidden");
+    render();
     setStatus("");
   } catch (err) {
     setStatus(err.shortMessage || err.message || "Failed to load.", "error");
   }
+}
+
+function render() {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const visible = allCampaigns.filter(({ c, mine }) => {
+    const ended = Number(c.deadline) <= nowSec;
+    if (filter === "live") return !ended;
+    if (filter === "ended") return ended;
+    if (filter === "mine")
+      return mine > 0n || c.creator.toLowerCase() === account;
+    return true;
+  });
+
+  els.count.textContent = `(${visible.length})`;
+  els.campaigns.innerHTML = "";
+
+  if (visible.length === 0) {
+    els.empty.textContent = "No campaigns match this filter.";
+    els.empty.classList.remove("hidden");
+    return;
+  }
+  els.empty.classList.add("hidden");
+  visible.forEach(renderCampaign);
 }
 
 function renderCampaign({ id, c, mine }) {
@@ -320,6 +348,16 @@ async function send(action, label) {
 els.connectBtn.addEventListener("click", connect);
 els.createBtn.addEventListener("click", createCampaign);
 els.refreshBtn.addEventListener("click", refresh);
+
+els.filters.querySelectorAll(".filter").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    filter = btn.dataset.filter;
+    els.filters
+      .querySelectorAll(".filter")
+      .forEach((b) => b.classList.toggle("active", b === btn));
+    render();
+  });
+});
 
 if (window.ethereum) {
   window.ethereum.on?.("accountsChanged", () => window.location.reload());
